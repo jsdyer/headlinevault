@@ -1,21 +1,11 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { cleanLines } from '../web/model.mjs';
-test('trims, removes blanks and preserves first-seen order', () => {
-  assert.deepEqual(cleanLines('  Halifax\nLangley\nHalifax\n\nVancouver  '), {
-    text: 'Halifax\nLangley\nVancouver', count: 3, removed: 1,
-  });
-});
-test('supports Windows and old Mac line endings', () => {
-  assert.equal(cleanLines('a\r\nb\ra').text, 'a\nb');
-});
-test('empty text and whitespace produce an empty result', () => {
-  assert.deepEqual(cleanLines(' \n\t'), { text: '', count: 0, removed: 0 });
-});
-test('preserves case and Unicode', () => {
-  assert.equal(cleanLines('Québec\nquébec\n東京\nQuébec').text, 'Québec\nquébec\n東京');
-});
-test('treats markup as ordinary text', () => {
-  assert.equal(cleanLines('<script>alert(1)</script>\n<script>alert(1)</script>').text, '<script>alert(1)</script>');
-});
-test('rejects non-text input', () => { assert.throws(() => cleanLines(null), TypeError); });
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+import {validateConfig,validateQuery,searchUrl,normalizeResponse,validateReceipt,safeLocUrl,csv} from '../web/model.mjs';
+const config=JSON.parse(fs.readFileSync(new URL('../web/config.json',import.meta.url)));const capture=Object.values(JSON.parse(fs.readFileSync(new URL('../web/data/captures.json',import.meta.url))).captures)[0];
+test('any custom terms/place/title encode into the provider query',()=>{const u=new URL(searchUrl({...config.defaults,query:'Halifax & "harbour"',state:'new york',city:'New York',lccn:'sn83045462'},2,40));assert.equal(u.searchParams.get('qs'),'Halifax & "harbour"');assert.equal(u.searchParams.get('location_state'),'new york');assert.equal(u.searchParams.get('fa'),'number_lccn:sn83045462');assert.equal(u.searchParams.get('sp'),'2');});
+test('adding a collection needs no code change or fixed count',()=>{const c=structuredClone(config);c.collections.push({id:'test-extra',label:'Extra question',query:'new search'});assert.equal(validateConfig(c).collections.length,config.collections.length+1);c.collections.push({...c.collections.at(-1)});assert.throws(()=>validateConfig(c));});
+test('dates are real and chronological; deep pagination is bounded',()=>{assert.throws(()=>validateQuery({...config.defaults,start:'1900-02-29'}));assert.throws(()=>validateQuery({...config.defaults,start:'1901-01-01',end:'1900-01-01'}));assert.throws(()=>searchUrl(config.defaults,10001,12));});
+test('source links allow only LOC HTTPS after normalization',()=>{assert.equal(safeLocUrl('http://www.loc.gov/resource/a/'),'https://www.loc.gov/resource/a/');for(const u of ['javascript:alert(1)','https://www.loc.gov.evil.test/a','https://user@loc.gov/a'])assert.equal(safeLocUrl(u),'');});
+test('response source count uses pagination.of, not total pages',()=>{const r=normalizeResponse({results:[],pagination:{of:59,total:10,next:'yes'}},config.defaults);assert.equal(r.total,59);assert.equal(r.hasNext,true);});
+test('malformed requests cannot erase state and source descriptions stay text',()=>{assert.throws(()=>normalizeResponse({error:'no'},config.defaults));const r=normalizeResponse({results:[{url:'https://www.loc.gov/resource/a/',title:'<img src=x onerror=bad()>',description:['<b>OCR</b>']}],pagination:{of:1}},config.defaults);assert.match(r.records[0].title,/<img/);assert.equal(r.records[0].excerpt,'<b>OCR</b>');});
+test('saved receipt imports validate source URLs and duplicates',()=>{assert.ok(validateReceipt(capture).records.length);const bad=structuredClone(capture);bad.records[0].url='https://evil.example/';assert.throws(()=>validateReceipt(bad));const duplicate=structuredClone(capture);duplicate.records.push(duplicate.records[0]);assert.throws(()=>validateReceipt(duplicate));});
+test('CSV exports escaped cells and guards spreadsheet formulas',()=>{const value=csv([{title:'=1+1',url:'https://www.loc.gov/a/',newspaper:'A "title"'}]);assert.match(value,/"'=1\+1"/);assert.match(value,/A ""title""/);});

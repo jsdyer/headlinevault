@@ -29,22 +29,30 @@ def main():
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
-                page.locator("#sample").click()
-                assert page.locator("#output").input_value() == "Halifax\nLangley\nVancouver"
-                assert "1 duplicate removed" in page.locator("#status").inner_text()
-                page.locator("#input").fill('<img src=x onerror="alert(1)">\n<img src=x onerror="alert(1)">')
-                assert page.locator("#output").input_value() == '<img src=x onerror="alert(1)">'
-                assert page.locator("img").count() == 0
-                page.locator("#clear").click()
-                assert page.locator("#output").input_value() == ""
-                page.locator("#sample").click()
+                page.wait_for_selector(".record")
+                initial = page.locator(".record").count()
+                assert initial > 0
+                page.locator(".record button").first.click()
+                assert page.locator("#pin-count").inner_text() == "1"
+                page.locator("#pinned-only").check()
+                assert page.locator(".record").count() == 1
+                page.locator("#pinned-only").uncheck()
+                page.locator("#query").fill("Halifax explosion")
+                assert "qs=Halifax" in page.locator("#source-search").get_attribute("href")
+                with page.expect_download() as download:
+                    page.locator("#export-json").click()
+                assert download.value.suggested_filename.endswith(".json")
+                page.route("https://www.loc.gov/**", lambda route: route.fulfill(status=503, body="unavailable"))
+                page.locator("#search-button").click()
+                page.wait_for_function("document.querySelector('#status').classList.contains('error')")
+                assert page.locator(".record").count() == initial
                 page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
                 assert not errors, errors
                 browser.close()
-            print("Browser checks passed: project subpath, sample, clear, safe text and mobile layout")
+            print("Browser checks passed: project subpath, real saved pages, pins, export, custom query, failure retention and mobile layout")
         finally:
             server.shutdown()
 

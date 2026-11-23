@@ -26,3 +26,6 @@
   the extra practical detail in the hub README. Only the short source sentence
   belongs in the homepage record. Import the note with `scripts/sync_guides.py
   --tool TOOL_ID` in the hub before regenerating its README.
+- Make coverage adaptable: put editable defaults and starting searches in config,
+  treat them as conveniences rather than limits, derive counts from data, test
+  adding entries, and document exact expand/refresh/publish steps in README.

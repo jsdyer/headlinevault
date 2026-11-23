@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "pageSize": 12,
+  "requestTimeoutMs": 90000,
+  "minimumRequestIntervalMs": 3500,
+  "defaults": {"query":"wireless telegraph", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31", "state":"", "city":"", "title":"", "lccn":"", "sort":"relevance"},
+  "collections": [
+    {"id":"wireless", "label":"When radio was new", "description":"Search the language of early wireless communication.", "query":"wireless telegraph", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"},
+    {"id":"canada", "label":"Canada in the American press", "description":"Cross-border reporting around the turn of the century.", "query":"Canadian railway", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"},
+    {"id":"fraud", "label":"The vocabulary of fraud", "description":"Historic reports of banking fraud; reports require verification.", "query":"bank fraud", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"}
+  ]
+}

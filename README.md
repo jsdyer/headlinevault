@@ -1,116 +1,52 @@
-# CoolCode browser tool template
+# Headline Vault
 
-A starting point for independent tools at `coolcode.ca/<repo>/`: a working local-text
-example, responsive UI, Python standard-library build, Node tests, PR checks and Pages
-publication. No npm install is needed.
-
-## Using the example
+[Open Headline Vault](https://coolcode.ca/headlinevault/) — search historic newspaper pages, inspect original scans and export a research trail.
 
 <!-- coolcode:guide -->
-The first occurrence of each trimmed line keeps its place. Compare the output with the original text before copying the result.
+Search any topic with dates, publication place or a newspaper LCCN; pin useful pages and save a JSON receipt or CSV. Saved starting searches load instantly, while live searches query the Library of Congress; OCR matches and newspaper claims need checking against the original page.
 <!-- /coolcode:guide -->
 
-For a real tool, replace this paragraph with one or two plain-text sentences
-about an example, a limit or how to interpret the results. Keep the source,
-coverage, refresh behaviour and a worked example in this README as appropriate.
-When updating a tool, revise any details its behaviour has changed and keep the
-homepage's shorter data-source sentence in `tool.json` accurate.
-The hub imports the marked note into the catalogue README.
+## Use it
 
-## One-time template setup
+1. Load a saved starting search or enter your own words. Choose an exact phrase, all/any words or a proximity search.
+2. Narrow dates, state/city of publication, exact newspaper title or LCCN. These fields are not restricted to a demonstration list.
+3. **Search the archive** makes an on-demand request to the public loc.gov API. Previous results stay available during slow/failed requests. The Library currently allows 20 JSON requests/minute; the app spaces requests at least 3.5 seconds and has a bounded 90-second timeout.
+4. Open **Page & OCR** to inspect the full original. Results are newspaper *pages*, not isolated articles. An opening OCR excerpt may not contain the matched phrase.
+5. Pin pages, then save a research receipt or CSV. With no pins, the export contains the current result page. Pins can span searches. Receipts preserve page links, query, retrieval date and source metadata; importing a receipt happens locally.
 
-Enable **Settings → General → Template repository** here. This repository does not
-need Pages enabled: its workflow builds/tests but intentionally skips deployment.
-New copies also skip deployment until `scripts/init.py` sets the tool ID to match
-their repository name. This lets you create the repo before configuring Pages.
+A source count is the Library's count for that query, not a count of verified events or all newspaper coverage. More than 100,000 matches should be narrowed before deep pagination. Do not infer absence from an empty search.
 
-## Start a new tool
+## Expand or customize
 
-1. Select **Use this template → Create a new repository**, choose owner `jsdyer`,
-   a unique lowercase name such as `my-tool`, and public visibility.
-2. Clone the new repository. Use Python 3.12+ and Node 24+.
-3. Set the identity, using a slug that matches the repository name:
+Edit [`web/config.json`](web/config.json). `defaults` controls the initial form. The `collections` array defines convenient saved starting searches; it does **not** limit live searches or require a code change when its length changes. For example append:
 
-```sh
-python3 scripts/init.py my-tool --title "My Tool" --description "Describe what this tool does."
+```json
+{"id":"halifax","label":"Halifax in 1917","description":"Contemporary U.S. reporting about Halifax.","query":"Halifax explosion","operation":"PHRASE","start":"1917-12-01","end":"1917-12-31"}
 ```
 
-Review the category, tags and icon in `tool.json`. `access: "browser"` tells the main
-catalogue that the tool works immediately without installation. `--owner` supports a different
-GitHub owner, but only projects owned by `jsdyer` inherit the CoolCode domain.
+`state`, `city`, `title`, `lccn` and `sort` can also be set per collection. Titles must match the Library's spelling; LCCN is usually a more stable newspaper identifier. `pageSize` is configurable from 1–100; there is no fixed collection count. Keep `minimumRequestIntervalMs` at least 3000 (default 3500), and `requestTimeoutMs` at most 120000.
 
-4. Replace the example in `web/` and its tests. Update the privacy explanation,
-   source attribution and README to describe the real tool.
-5. Test and preview:
+Changing config and pushing to `main` publishes the new starting-search choices. A newly added search works live immediately; to populate or refresh its saved capture:
 
 ```sh
+python3 scripts/collect.py --collection halifax
+# Or refresh every configured collection:
+python3 scripts/collect.py
 node --test tests/*.test.mjs
 python3 -m unittest discover -s tests -v
 python3 scripts/build.py
-python3 -m http.server 8000 --directory dist
 ```
 
-Open `http://localhost:8000/`. The example trims lines, skips blanks and removes exact
-duplicates, preserving first-seen order and capitalization. It processes the text in tab memory. Update that explanation if your app behaves differently.
+Commit `web/config.json` and the generated `web/data/captures.json`, then push. Alternatively use **Actions → Headline Vault · Check and publish → Run workflow**, enable **Refresh saved searches**, and run it on `main`. Collection writes only after all selected requests succeed; a failed refresh does not overwrite the last usable file. The default build is offline. Collection is owner-triggered, not a daily archive scrape. Reload an open browser tab to see a newly published configuration/capture.
 
-CI also tests the browser flow and mobile layout at a project subpath. Replace the
-sample assertions in `tests/browser_smoke.py` when implementing your own UI. To run
-that check locally (optional for ordinary preview):
+## Source, rights and privacy
 
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r tests/browser-requirements.txt
-python3 -m playwright install --with-deps chromium
-python3 tests/browser_smoke.py
-```
+- [Chronicling America](https://www.loc.gov/collections/chronicling-america/), Library of Congress / National Digital Newspaper Program. The modern loc.gov API replaced the legacy Chronicling America API in 2025. No account or key is required.
+- [Official newspaper query guide](https://github.com/LibraryOfCongress/data-exploration/blob/master/loc.gov%20JSON%20API/Chronicling_America/README.md), [API rate limits](https://www.loc.gov/apis/json-and-yaml/working-within-limits/), [rights and access](https://www.loc.gov/collections/chronicling-america/about-this-collection/rights-and-access/).
+- The Library believes collection newspapers are public domain or have no known restrictions. Check the individual original for reuse; the app does not provide a new blanket licence for third-party material.
+- Coverage is digitized **U.S. newspapers**, potentially reporting on Canadian subjects. It is not a complete Canadian newspaper archive. Historic text can be inaccurate or offensive.
+- Search fields are sent directly to loc.gov only on explicit search/pagination. Remote page thumbnails load from Library of Congress. Pins and imported receipts stay in memory; export to retain them. No account, personal API key, proxy or secret is needed.
 
-Playwright is a test-only dependency; the app and its static build do not use it.
+## Development
 
-## Publish and register
-
-When the actual tool is ready, in the **new tool repository** set **Settings → Pages → Build and deployment →
-Source → GitHub Actions**. Push to `main`, or manually run **Browser tool · Check and
-publish** after enabling Pages. If the initial deployment ran before Pages was enabled,
-enable it and rerun. PRs only check/build and provide a downloadable preview artifact.
-
-Keep `{{VISIT_COUNTER}}` in the page head and `{{ISSUE_LINK}}` in the footer when replacing the starter UI. The build enables these for initialized CoolCode repositories. The shared counter records aggregate opens on coolcode.ca by public tool ID. Toolbox inputs and URL parameters are excluded. The issue link opens a reporting form with the tool already selected.
-
-Keep app-owned asset paths and module imports relative. Check `https://coolcode.ca/my-tool/`.
-Do not add a CNAME or set `coolcode.ca` as this project's custom domain; the account
-site supplies it. Only successful `main` builds deploy.
-
-After verifying the app, copy the reviewed object from `tool.json` into `data/tools.json`
-in [the main site](https://github.com/jsdyer/jsdyer.github.io). Each tool still builds
-independently. Update the hub record when listing metadata changes; the hub is the
-authority for discovery. Ordinary app updates touch only this repository.
-
-The main site separates **Use in your browser** from **Install yourself**. An app
-that asks for a file is still a browser tool. Standalone Linux packages should start
-in their own repositories with their own build/release workflow, rather than copying
-this browser-only scaffold. Their hub record uses `access: "install"`, links to an
-installation guide, and includes `requirements`.
-
-## Files
-
-| Path | Purpose |
-| --- | --- |
-| `tool.json` | Page metadata and a ready-to-copy catalogue record |
-| `web/` | HTML, responsive CSS, DOM interactions and separate model logic |
-| `scripts/build.py` | Escape metadata and build `web/` into `dist/` |
-| `scripts/init.py` | Set a new project's identity |
-| `tests/` | Application and builder tests |
-| `.github/workflows/pages.yml` | Check PRs and publish successful main builds |
-| `AGENTS.md` | Instructions for future coding work |
-
-Namespace optional storage as `coolcode:<tool-id>:<key>`; CoolCode paths share a
-browser origin. Don't save pasted text/uploads by default. Document external APIs
-and send only the information needed for the selected action. Never embed secrets.
-
-Scheduled refresh is opt-in. Validate source data before deploying, display its date,
-and preserve the last good deployment on failure. Public-repository schedules can
-stop after 60 days without repository activity.
-
-Templates don't propagate future edits automatically. Adopt fixes explicitly and
-consider a versioned reusable workflow once several tools confirm the shared process.
-Choose and add the intended software license before distributing a new project.
+Source: `web/`. Configuration: `web/config.json`. Saved search data: `web/data/captures.json`. Collector: `scripts/collect.py` (standard library). Tests cover parameter encoding, receipt validation, safe URLs, CSV exports, configurable collection expansion and failure-safe collection. GitHub Actions runs the offline tests/build and a browser smoke check before GitHub Pages publication. Generated `dist/` is not committed.
