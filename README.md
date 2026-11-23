@@ -3,7 +3,7 @@
 [Open Headline Vault](https://coolcode.ca/headlinevault/) — search historic newspaper pages, inspect original scans and export a research trail.
 
 <!-- coolcode:guide -->
-Search any topic with dates, publication place or a newspaper LCCN; pin useful pages and save a JSON receipt or CSV. Saved starting searches load instantly, while live searches query the Library of Congress; OCR matches and newspaper claims need checking against the original page.
+Search any topic with dates, publication place or a newspaper LCCN; pin useful pages and save a JSON receipt or CSV. Saved starting searches load instantly; live searches query the Library of Congress. If a browser cannot read its response, open the exact source JSON and import it locally with its search URL. OCR matches and newspaper claims need checking against the original page.
 <!-- /coolcode:guide -->
 
 ## Use it
@@ -12,9 +12,21 @@ Search any topic with dates, publication place or a newspaper LCCN; pin useful p
 2. Narrow dates, state/city of publication, exact newspaper title or LCCN. These fields are not restricted to a demonstration list.
 3. **Search the archive** makes an on-demand request to the public loc.gov API. Previous results stay available during slow/failed requests. The Library currently allows 20 JSON requests/minute; the app spaces requests at least 3.5 seconds and has a bounded 90-second timeout.
 4. Open **Page & OCR** to inspect the full original. Results are newspaper *pages*, not isolated articles. An opening OCR excerpt may not contain the matched phrase.
-5. Pin pages, then save a research receipt or CSV. With no pins, the export contains the current result page. Pins can span searches. Receipts preserve page links, query, retrieval date and source metadata; importing a receipt happens locally.
+5. Pin pages, then save a research receipt or CSV. With no pins, the export contains the current result page. Pins can span searches. Receipts preserve page links, query, retrieval date and source metadata; importing a receipt happens locally and preserves existing pins.
 
 A source count is the Library's count for that query, not a count of verified events or all newspaper coverage. More than 100,000 matches should be narrowed before deep pagination. Do not infer absence from an empty search.
+
+## When a live search fails
+
+Direct browser access can fail intermittently because of a network problem, cross-origin access restrictions, a slow query, or a Library verification response. A generic browser “Failed to fetch” error cannot identify which cause occurred. The Library also documents rate limits and possible HTML CAPTCHA pages even below its published limit. The app does not bypass verification or automatically retry requests. Earlier results and pins stay available, and both recovery links keep the **attempted query and result page**, including a failed next-page request.
+
+Open **Bring in results from the Library website**:
+
+1. **Open source JSON for this search** opens the exact query directly at the official Library website. If it returns JSON, save that response as a `.json` file. If it shows verification or an error, follow the Library's instructions; an HTML page is not search data.
+2. Keep the complete source JSON URL with the saved file. Paste it in **Exact source JSON URL**, or choose **Use the linked search URL** when the file came from the current link, then choose **Import Library JSON**. The URL supplies the query, dates, filters, page and page size; the importer checks the response's page information against it. Unsupported or ambiguous URLs are rejected.
+3. Read the imported pages, pin them, and export normally. Imports do not send file contents anywhere or clear earlier pins. Their displayed date is explicitly **import date**, not an invented source retrieval/capture time. Saved app receipts remain importable.
+
+The API request uses the Library's documented `at=results,pagination` projection to avoid unnecessary response fields. This reduces transferred data; it cannot guarantee service availability or faster query execution. No proxy or Cloudflare change is required for the local import option.
 
 ## Expand or customize
 
@@ -49,4 +61,4 @@ Commit `web/config.json` and the generated `web/data/captures.json`, then push. 
 
 ## Development
 
-Source: `web/`. Configuration: `web/config.json`. Saved search data: `web/data/captures.json`. Collector: `scripts/collect.py` (standard library). Tests cover parameter encoding, receipt validation, safe URLs, CSV exports, configurable collection expansion and failure-safe collection. GitHub Actions runs the offline tests/build and a browser smoke check before GitHub Pages publication. Generated `dist/` is not committed.
+Source: `web/`. Configuration: `web/config.json`. Saved search data: `web/data/captures.json`. Collector: `scripts/collect.py` (standard library). Tests cover parameter encoding, receipt validation, safe URLs, CSV exports, configurable collection expansion, exact raw JSON import context and timestamps, failure messages, and failure-safe collection. GitHub Actions runs the offline tests/build and a browser smoke check before GitHub Pages publication. Generated `dist/` is not committed.

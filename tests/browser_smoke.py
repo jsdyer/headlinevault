@@ -2,6 +2,7 @@
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import json
 import shutil
 import tempfile
 import threading
@@ -42,17 +43,53 @@ def main():
                 with page.expect_download() as download:
                     page.locator("#export-json").click()
                 assert download.value.suggested_filename.endswith(".json")
-                page.route("https://www.loc.gov/**", lambda route: route.fulfill(status=503, body="unavailable"))
-                page.locator("#search-button").click()
-                page.wait_for_function("document.querySelector('#status').classList.contains('error')")
+                page.locator("#recovery summary").click()
+                assert page.locator("#source-json-url").input_value() == ""
+                page.locator("#start").fill("1917-12-06")
+                page.locator("#end").fill("1917-12-31")
+                page.locator("#use-source-json").click()
+                source = page.locator("#source-json-url").input_value()
+                assert "qs=Halifax" in source
+                raw = {"results": [{"id": "https://www.loc.gov/resource/sn12345678/1917-12-10/ed-1/?sp=2", "url": "https://www.loc.gov/resource/sn12345678/1917-12-10/ed-1/?sp=2", "title": "Imported Halifax report", "date": "1917-12-10"}], "pagination": {"current": 1, "perpage": 12, "of": 18, "next": source.replace("sp=1", "sp=2")}}
+                page.locator("#source-json-url").fill(source.replace("www.loc.gov", "evil.example"))
+                page.locator("#source-import").set_input_files({"name": "source.json", "mimeType": "application/json", "buffer": json.dumps(raw).encode()})
+                page.wait_for_function("document.querySelector('#status').textContent.includes('Could not import source JSON')")
                 assert page.locator(".record").count() == initial
+                assert page.locator("#pin-count").inner_text() == "1"
+                page.locator("#use-source-json").click()
+                page.locator("#source-import").set_input_files({"name": "source.json", "mimeType": "application/json", "buffer": json.dumps(raw).encode()})
+                page.wait_for_function("document.querySelector('#mode').textContent === 'IMPORTED SOURCE JSON'")
+                assert page.locator(".record").count() == 1
+                assert page.locator(".record h3").inner_text() == "Imported Halifax report"
+                assert page.locator("#date-kind").inner_text() == "import date (UTC)"
+                assert page.locator("#pin-count").inner_text() == "1"
+                # Change the form, then paginate the imported query: recovery must describe the attempted page.
+                page.locator("#query").fill("unrelated form edit")
+                assert page.locator("#source-json-url").input_value() == source
+                def declined(route):
+                    assert page.locator("#source-import").is_disabled()
+                    assert page.locator("#import").is_disabled()
+                    route.fulfill(status=403, content_type="text/html", body="declined")
+                page.route("https://www.loc.gov/**", declined)
+                page.locator("#next").click()
+                page.wait_for_function("document.querySelector('#status').textContent.includes('HTTP 403')")
+                assert "sp=2" in page.locator("#source-json").get_attribute("href")
+                assert "qs=Halifax" in page.locator("#source-json").get_attribute("href")
+                assert "sp=2" in page.locator("#source-search").get_attribute("href")
+                assert page.locator(".record").count() == 1
+                assert page.locator(".record h3").inner_text() == "Imported Halifax report"
+                assert page.locator("#pin-count").inner_text() == "1"
+                page.locator("#pinned-only").check()
+                assert page.locator(".record").count() == 1
+                assert page.locator(".record h3").inner_text() != "Imported Halifax report"
+                page.locator("#pinned-only").uncheck()
                 page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
                 assert not errors, errors
                 browser.close()
-            print("Browser checks passed: project subpath, real saved pages, pins, export, custom query, failure retention and mobile layout")
+            print("Browser checks passed: project subpath, real saved pages, pins, export, custom query, raw source import/rejection, recovery pagination, failure retention and mobile layout")
         finally:
             server.shutdown()
 
