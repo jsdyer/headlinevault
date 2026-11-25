@@ -18,7 +18,7 @@ def safe_url(value):
     return urlunsplit(('https',p.netloc,p.path,p.query,p.fragment))
 
 def query_url(query,size):
-    if not query.get('query','').strip():raise ValueError('Each collection needs a search query')
+    if not query.get('query','').strip() and not any(query.get(k) for k in ['start','end','state','city','title','lccn']):raise ValueError('Each collection needs search words or a date/place/newspaper filter')
     if query.get('operation','AND') not in ('AND','OR','PHRASE','~5','~10'):raise ValueError('Unknown search operation')
     p={'dl':'page','searchType':'advanced','qs':query['query'],'ops':query.get('operation','AND'),'c':size,'sp':1,'fo':'json'}
     for key,param in {'start':'start_date','end':'end_date','state':'location_state','city':'location_city','title':'partof_title'}.items():

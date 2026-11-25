@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build a browser tool using Python's standard library; no network required."""
 from html import escape
+from newspaper_collection import manifest as newspaper_manifest
 import json
 from pathlib import Path
 import re
@@ -51,6 +52,9 @@ def build(root=ROOT):
     with tempfile.TemporaryDirectory(prefix="coolcode-tool-") as temporary:
         stage = Path(temporary) / "site"
         shutil.copytree(web, stage)
+        if (stage / 'data/captures.json').exists():
+            shared=newspaper_manifest(json.loads((stage / 'data/captures.json').read_text()))
+            (stage / 'data/newspapers.json').write_text(json.dumps(shared,ensure_ascii=False,indent=2)+'\n')
         index = stage / "index.html"
         page = index.read_text(encoding="utf-8")
         for token, key in {"TITLE": "title", "DESCRIPTION": "description", "TOOL_ID": "id", "SOURCE_URL": "source"}.items():

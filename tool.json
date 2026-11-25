@@ -1,7 +1,7 @@
 {
   "id": "headlinevault",
   "title": "Headline Vault",
-  "description": "Search historic newspaper pages and export a source-linked research trail.",
+  "description": "Browse historic newspapers by date, town and paper, search OCR and copy source-linked page citations.",
   "category": "media",
   "tags": [
     "newspapers",

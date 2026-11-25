@@ -9,7 +9,7 @@ export function safeLocUrl(value, image = false) {
 function date(value) { if(!value) return ''; if(!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(value)) || new Date(value).toISOString().slice(0,10)!==value) throw new Error('Use valid calendar dates.'); return value; }
 export function validateQuery(raw) {
   const q={query:text(raw.query),operation:text(raw.operation)||'AND',start:date(text(raw.start)),end:date(text(raw.end)),state:text(raw.state),city:text(raw.city),title:text(raw.title),lccn:text(raw.lccn),sort:text(raw.sort)||'relevance'};
-  if(!q.query || q.query.length>300) throw new Error('Enter search words or a phrase (up to 300 characters).');
+  if(q.query.length>300 || (!q.query&&!q.start&&!q.end&&!q.state&&!q.city&&!q.title&&!q.lccn)) throw new Error('Enter search words, a date, a town or a newspaper (up to 300 search characters).');
   if(!OPS.has(q.operation)||!SORTS.has(q.sort)) throw new Error('Choose a supported search operation and order.');
   if(q.start && q.end && q.start>q.end) throw new Error('The start date must not follow the end date.');
   if(q.lccn && !/^[a-zA-Z0-9-]{4,30}$/.test(q.lccn)) throw new Error('Use the newspaper LCCN, such as sn83045462.');
@@ -86,3 +86,8 @@ export function archiveFetchError(error) {
   if(error instanceof TypeError)return 'This browser could not read the Library of Congress response. A network interruption, cross-site access restriction or source verification page can cause this; the browser does not reveal which. Open the exact search on the Library website, or import its JSON results below.';
   return error?.message||'The archive response could not be read.';
 }
+
+export function centuryDate(value){date(value);if(!value)throw Error('Choose a reference date.');const [year,month,day]=value.split('-').map(Number);if(year<=100)throw Error('Choose a reference year after 100.');const target=year-100;const last=new Date(Date.UTC(target,month,0)).getUTCDate();return `${String(target).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(Math.min(day,last)).padStart(2,'0')}`;}
+export function pageCitation(record){const url=safeLocUrl(record.url);if(!url)throw Error('Invalid source page.');return [record.newspaper||record.title,[record.city,record.state].filter(Boolean).join(', '),record.date||'Date not stated',record.page?'page '+record.page:'page number not supplied','Library of Congress, Chronicling America',url].filter(Boolean).join('. ');}
+export function queryPermalink(raw,base){const q=validateQuery(raw);const u=new URL(base);u.search='';u.hash='search';for(const [k,v] of Object.entries(q))if(v)u.searchParams.set(k,v);return u.href;}
+export function paperDirectory(captures){const map=new Map();for(const c of Object.values(captures))for(const r of c.records||[])if(r.lccn&&!map.has(r.lccn))map.set(r.lccn,{lccn:r.lccn,title:r.newspaper||r.title,city:r.city||'',state:r.state||''});return [...map.values()].sort((a,b)=>a.title.localeCompare(b.title));}

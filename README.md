@@ -4,6 +4,7 @@
 
 <!-- coolcode:guide -->
 Search any topic with dates, publication place or a newspaper LCCN; pin useful pages and save a JSON receipt or CSV. Saved starting searches load instantly; live searches query the Library of Congress. If a browser cannot read its response, open the exact source JSON and import it locally with its search URL. OCR matches and newspaper claims need checking against the original page.
+Use This day 100 years ago to browse the same calendar date a century earlier; select a reference date, newspaper or town, then search OCR words if needed. A blank query is allowed with a date or publication filter. Copy page citations with their original Library of Congress links, or copy a search link that restores filters without searching automatically. The retained collection is shared through data/newspapers.json for other CoolCode newspaper tools. Coverage remains digitized U.S. newspapers, including cross-border reporting; it is not a Canadian newspaper collection.
 <!-- /coolcode:guide -->
 
 ## Use it
@@ -62,3 +63,11 @@ Commit `web/config.json` and the generated `web/data/captures.json`, then push. 
 ## Development
 
 Source: `web/`. Configuration: `web/config.json`. Saved search data: `web/data/captures.json`. Collector: `scripts/collect.py` (standard library). Tests cover parameter encoding, receipt validation, safe URLs, CSV exports, configurable collection expansion, exact raw JSON import context and timestamps, failure messages, and failure-safe collection. GitHub Actions runs the offline tests/build and a browser smoke check before GitHub Pages publication. Generated `dist/` is not committed.
+
+## Date browsing and shared newspaper collection
+
+Use a blank OCR query with a date, town, paper or LCCN to browse pages rather than matching an artificial word. **This day 100 years ago** uses the selected reference date minus100 calendar years, clamping February29 to February28 if needed. Its source is still Chronicling America’s U.S. newspapers; coverage and title dates vary. The selected current paper/town filters remain active.
+
+Paper and town selectors are derived from all retained captures, not a fixed list; custom inputs accept other supported papers. Copy a page citation for the original scan, exact source date and page number, or copy the query link to reproduce its filters. Shared links restore filters but do not silently send a live search. OCR search happens at the provider; excerpts may not contain the match, and a scan should be checked before quotation.
+
+Every offline build derives `data/newspapers.json` (`coolcode.newspaper-collection.v1`) from the actual retained captures. It exposes paper/LCCN/place metadata and absolute config/capture URLs for reuse by Old News Oddities. Consumers must retain each capture’s own `capturedAt`, source URL, query and coverage, rather than substituting the manifest maximum date. No API key or new collector schedule is needed. Update starting searches in `web/config.json`, run `python3 scripts/collect.py` or its existing manual workflow refresh, validate and publish. The generated manifest updates with that build.

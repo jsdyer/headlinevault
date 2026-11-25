@@ -33,6 +33,17 @@ def main():
                 page.wait_for_selector(".record")
                 initial = page.locator(".record").count()
                 assert initial > 0
+                assert page.locator('#browse-paper option').count() > 1
+                assert page.locator('#browse-town option').count() > 1
+                assert page.get_by_role('button',name='Copy page citation').count() == initial
+                page.locator('#reference-date').fill('2000-02-29')
+                page.route('https://www.loc.gov/**',lambda route:route.fulfill(json={'results':[],'pagination':{'of':0}}))
+                page.locator('#century-search').click()
+                page.wait_for_function("document.querySelector('#status').textContent.includes('Loaded 0')")
+                assert page.locator('#start').input_value() == '1900-02-28'
+                assert page.locator('#query').input_value() == ''
+                page.locator('#load-capture').click()
+                page.unroute('https://www.loc.gov/**')
                 page.locator(".record button").first.click()
                 assert page.locator("#pin-count").inner_text() == "1"
                 page.locator("#pinned-only").check()
