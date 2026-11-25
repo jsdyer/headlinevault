@@ -82,6 +82,8 @@ def main():
                     assert page.locator("#import").is_disabled()
                     route.fulfill(status=403, content_type="text/html", body="declined")
                 page.route("https://www.loc.gov/**", declined)
+                # Respect the request spacing after the earlier century-date lookup.
+                page.wait_for_timeout(3600)
                 page.locator("#next").click()
                 page.wait_for_function("document.querySelector('#status').textContent.includes('HTTP 403')")
                 assert "sp=2" in page.locator("#source-json").get_attribute("href")
