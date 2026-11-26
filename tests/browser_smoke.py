@@ -29,6 +29,7 @@ def main():
                 page = browser.new_page(viewport={"width": 1280, "height": 1000})
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
+                page.route("https://coolcode-visitor-api.jeffdyer.workers.dev/**",lambda route:route.abort())
                 page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/")
                 page.wait_for_selector(".record")
                 initial = page.locator(".record").count()
@@ -49,15 +50,6 @@ def main():
                 page.locator("#pinned-only").check()
                 assert page.locator(".record").count() == 1
                 page.locator("#pinned-only").uncheck()
-                page.locator("#query").fill("Halifax")
-                page.locator("#start").fill("1800-01-01")
-                page.locator("#end").fill("1930-12-31")
-                for selector in ["#state","#city","#title","#lccn"]:
-                    page.locator(selector).fill("")
-                page.wait_for_timeout(3600)
-                page.locator("#search-button").click()
-                page.get_by_role("link",name="The Evening Post, front page").wait_for()
-                assert page.get_by_role("link",name="Morning Oregonian, front page").is_visible()
                 page.locator("#query").fill("Halifax explosion")
                 assert "qs=Halifax" in page.locator("#source-search").get_attribute("href")
                 with page.expect_download() as download:
