@@ -83,7 +83,7 @@ export function archiveResponseProblem(status,contentType='',challenge=false) {
 export function archiveFetchError(error) {
   if(error?.name==='AbortError'||error?.name==='TimeoutError')return 'The archive did not finish within the request time limit. Try a narrower date range, or open the exact search on the Library of Congress website.';
   if(error instanceof SyntaxError)return 'The Library of Congress response was not valid JSON search data. Open the exact source search to check what the service returned.';
-  if(error instanceof TypeError)return 'This browser could not read the Library of Congress response. A network interruption, cross-site access restriction or source verification page can cause this; the browser does not reveal which. Open the exact search on the Library website, or import its JSON results below.';
+  if(error instanceof TypeError)return 'This browser could not reach CoolCode’s newspaper search service. Check your connection and try again, or open the Library search using the source link.';
   return error?.message||'The archive response could not be read.';
 }
 
