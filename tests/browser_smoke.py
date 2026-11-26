@@ -102,6 +102,7 @@ def main():
                 page.locator("#query").fill("Halifax")
                 page.locator("#start").fill("1800-01-01")
                 page.locator("#end").fill("1930-12-31")
+                page.locator('details.advanced summary').click()
                 for selector in ["#state","#city","#title","#lccn"]:
                     page.locator(selector).fill("")
                 page.wait_for_timeout(3600)
@@ -119,6 +120,13 @@ def main():
                 page.get_by_role("link", name="Open this search and change filters").click()
                 page.wait_for_function("document.querySelector('#query')?.value === 'Canadian railway'")
                 assert page.locator(".record").count() > 0
+                page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/search/halifax-explosion-1917/")
+                assert page.locator("ol li a").count() == 4
+                assert page.locator("link[rel='canonical']").get_attribute("href") == "https://coolcode.ca/headlinevault/search/halifax-explosion-1917/"
+                page.get_by_role("link",name="Open and edit the Halifax newspaper search").click()
+                page.get_by_role("link",name="The Evening Post, front page").wait_for()
+                assert page.locator("#query").input_value() == "Halifax"
+                assert page.locator("#saved-fallback ol li").count() == 4
                 assert not errors, errors
                 browser.close()
             print("Browser checks passed: project subpath, real saved pages, pins, export, custom query, raw source import/rejection, recovery pagination, failure retention and mobile layout")

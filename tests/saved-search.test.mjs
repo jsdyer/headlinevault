@@ -40,3 +40,13 @@ test('individual archival citations match the Halifax request without enabling a
  const imitation={...reviewedPages,records:[{...reviewedPages.records[0],url:'https://tile.loc.gov/some-other-path'}]};
  assert.equal(findSavedPages([imitation],req).matches.length,0);
 });
+
+import {readFileSync} from 'node:fs';
+test('the indexable Halifax article cites the identical original scans and matching headlines',()=>{
+  const html=readFileSync(new URL('../web/search/halifax-explosion-1917/index.html',import.meta.url),'utf8');
+  for(const record of reviewedPages.records) {
+    assert.ok(html.includes(record.url));
+    assert.ok(html.includes(record.excerpt));
+    assert.ok(html.includes(record.date));
+  }
+});

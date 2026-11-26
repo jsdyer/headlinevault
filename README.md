@@ -90,3 +90,5 @@ When the provider declines or delays a search, the tool checks the currently pub
 ### Verified Halifax newspaper pages
 
 A submitted search also checks the saved collection as soon as it starts. Four individually reviewed front pages cover the Halifax explosion on December 7–8, 1917. The two New York citations open digitized PDFs at the Library of Congress. The Oregon pages link to University of Oregon Libraries’ Historic Oregon Newspapers, which marks these scans as public domain. Short excerpts support matching, and each citation displays its publication date and archive. The complete live search runs separately and its totals come from the live response. `web/verified-pages.mjs` holds this reviewed evidence separately from scheduled receipts so a later refresh preserves it.
+
+The [1917 Halifax Explosion newspaper front pages](https://coolcode.ca/headlinevault/search/halifax-explosion-1917/) page provides four original scans in static HTML and opens the editable Halifax search with its dates filled in.

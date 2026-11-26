@@ -104,3 +104,22 @@ jobs:
     steps:
       - uses: actions/deploy-pages@v5
         id: publish
+  published-search:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install Chromium for the published-site check
+        run: |
+          python3 -m pip install -r tests/browser-requirements.txt
+          python3 -m playwright install --with-deps chromium
+      - name: Check the published Halifax page and search fallback
+        run: python3 tests/published_search.py
