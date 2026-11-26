@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import time
 from urllib.parse import urlencode, urlsplit, urlunsplit
-from urllib.request import Request, urlopen
+from loc_http import read_loc
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://www.loc.gov/collections/chronicling-america/'
 
@@ -54,10 +54,7 @@ def collect(root=ROOT,only=None):
     for n,item in enumerate(chosen):
         if n:time.sleep(delay)
         q={k:v for k,v in {**config['defaults'],**item}.items() if k in ('query','operation','start','end','state','city','title','lccn','sort')};url=query_url(q,size)
-        request=Request(url,headers={'User-Agent':'CoolCode HeadlineVault contact jeffdyer@gmail.com','Accept':'application/json'})
-        with urlopen(request,timeout=config['requestTimeoutMs']/1000) as response:
-            raw=response.read(20_000_001)
-        if len(raw)>20_000_000:raise ValueError('Source response too large')
+        raw=read_loc(url,timeout=config['requestTimeoutMs']/1000,limit=20_000_000,default_agent='CoolCode HeadlineVault (+https://coolcode.ca/headlinevault/)')
         captured=datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
         result['captures'][item['id']]=normalize(json.loads(raw),q,captured,url,raw)
         print(item['id'],len(result['captures'][item['id']]['records']),'pages',flush=True)

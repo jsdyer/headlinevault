@@ -31,6 +31,8 @@ jobs:
           node-version: '24'
       - name: Refresh configured saved searches
         if: github.event_name == 'workflow_dispatch' && inputs.refresh_data
+        env:
+          LOC_USER_AGENT: ${{ secrets.LOC_USER_AGENT }}
         run: python3 scripts/collect.py
       - name: Test the application
         run: node --test tests/*.test.mjs

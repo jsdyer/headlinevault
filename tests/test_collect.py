@@ -19,8 +19,8 @@ class CollectionTests(unittest.TestCase):
  def test_failed_refresh_preserves_last_good_file(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=Path(tmp);(root/'web/data').mkdir(parents=True);(root/'web/config.json').write_text((ROOT/'web/config.json').read_text());out=root/'web/data/captures.json';out.write_text('{"schemaVersion":1,"captures":{}}');before=out.read_bytes()
-   with patch('collect.urlopen',side_effect=OSError('offline')):
-    with self.assertRaises(OSError):collect(root)
+   with patch('collect.read_loc',side_effect=RuntimeError('LOC request failed')):
+    with self.assertRaises(RuntimeError):collect(root)
    self.assertEqual(before,out.read_bytes())
  def test_empty_query_rejected(self):
   with self.assertRaises(ValueError):query_url({'query':''},12)
