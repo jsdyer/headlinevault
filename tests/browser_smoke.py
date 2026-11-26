@@ -86,6 +86,8 @@ def main():
                 page.wait_for_timeout(3600)
                 page.locator("#next").click()
                 page.wait_for_function("document.querySelector('#status').textContent.includes('HTTP 403')")
+                assert page.locator("#saved-fallback").is_visible()
+                assert "saved pages" in page.locator("#saved-fallback").inner_text()
                 assert "sp=2" in page.locator("#source-json").get_attribute("href")
                 assert "qs=Halifax" in page.locator("#source-json").get_attribute("href")
                 assert "sp=2" in page.locator("#source-search").get_attribute("href")

@@ -7,6 +7,7 @@
   "collections": [
     {"id":"wireless", "label":"When radio was new", "description":"Search the language of early wireless communication.", "query":"wireless telegraph", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"},
     {"id":"canada", "label":"Canada in the American press", "description":"Cross-border reporting around the turn of the century.", "query":"Canadian railway", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"},
-    {"id":"fraud", "label":"The vocabulary of fraud", "description":"Historic reports of banking fraud; reports require verification.", "query":"bank fraud", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"}
+    {"id":"fraud", "label":"The vocabulary of fraud", "description":"Historic reports of banking fraud; reports require verification.", "query":"bank fraud", "operation":"PHRASE", "start":"1900-01-01", "end":"1900-12-31"},
+    {"id":"halifax","label":"Halifax in the American press","description":"Find Halifax in historical United States newspaper pages, 1800–1930.","query":"halifax","operation":"PHRASE","start":"1800-01-01","end":"1930-12-31"}
   ]
 }
