@@ -100,6 +100,13 @@ def main():
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 page.screenshot(path=str(screenshots / "mobile.png"), full_page=True)
+                # Each indexable example has real source links before script execution.
+                page.goto(f"http://127.0.0.1:{server.server_port}/example-tool/search/canadian-railways-1900/")
+                assert page.locator("ol a[href^='https://www.loc.gov/']").count() > 0
+                assert page.locator("link[rel='canonical']").get_attribute("href") == "https://coolcode.ca/headlinevault/search/canadian-railways-1900/"
+                page.get_by_role("link", name="Open this search and change filters").click()
+                page.wait_for_function("document.querySelector('#query')?.value === 'Canadian railway'")
+                assert page.locator(".record").count() > 0
                 assert not errors, errors
                 browser.close()
             print("Browser checks passed: project subpath, real saved pages, pins, export, custom query, raw source import/rejection, recovery pagination, failure retention and mobile layout")
