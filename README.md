@@ -11,7 +11,7 @@ Use This day 100 years ago to browse the same calendar date a century earlier; s
 
 1. Load a saved starting search or enter your own words. Choose an exact phrase, all/any words or a proximity search.
 2. Narrow dates, state/city of publication, exact newspaper title or LCCN. These fields are not restricted to a demonstration list.
-3. **Search the archive** makes an on-demand request to the public loc.gov API. Previous results stay available during slow/failed requests. The Library currently allows 20 JSON requests/minute; the app spaces requests at least 3.5 seconds and has a bounded 90-second timeout.
+3. **Search the archive** sends the form through the CoolCode newspaper endpoint to the public loc.gov API. Previous results stay available during slow/failed requests. The Library currently allows 20 JSON requests/minute; the app spaces requests at least 3.5 seconds and has a bounded 90-second timeout.
 4. Open **Page & OCR** to inspect the full original. Results are newspaper *pages*, not isolated articles. An opening OCR excerpt may not contain the matched phrase.
 5. Pin pages, then save a research receipt or CSV. With no pins, the export contains the current result page. Pins can span searches. Receipts preserve page links, query, retrieval date and source metadata; importing a receipt happens locally and preserves existing pins.
 
@@ -19,7 +19,7 @@ A source count is the Library's count for that query, not a count of verified ev
 
 ## When a live search fails
 
-Direct browser access can fail intermittently because of a network problem, cross-origin access restrictions, a slow query, or a Library verification response. A generic browser “Failed to fetch” error cannot identify which cause occurred. The Library also documents rate limits and possible HTML CAPTCHA pages even below its published limit. The app does not bypass verification or automatically retry requests. Earlier results and pins stay available, and both recovery links keep the **attempted query and result page**, including a failed next-page request.
+The shared service can report source errors or rate limits. Retry after the indicated interval. Earlier results and pins stay available, and both recovery links keep the **attempted query and result page**, including a failed next-page request.
 
 Open **Bring in results from the Library website**:
 
@@ -58,7 +58,7 @@ Commit `web/config.json` and the generated `web/data/captures.json`, then push. 
 - [Official newspaper query guide](https://github.com/LibraryOfCongress/data-exploration/blob/master/loc.gov%20JSON%20API/Chronicling_America/README.md), [API rate limits](https://www.loc.gov/apis/json-and-yaml/working-within-limits/), [rights and access](https://www.loc.gov/collections/chronicling-america/about-this-collection/rights-and-access/).
 - The Library believes collection newspapers are public domain or have no known restrictions. Check the individual original for reuse; the app does not provide a new blanket licence for third-party material.
 - Coverage is digitized **U.S. newspapers**, potentially reporting on Canadian subjects. It is not a complete Canadian newspaper archive. Historic text can be inaccurate or offensive.
-- Search fields are sent directly to loc.gov only on explicit search/pagination. Remote page thumbnails load from Library of Congress. Pins and imported receipts stay in memory; export to retain them. Public browser searches require no account, personal API key or proxy. An optional private collector header is described below.
+- An explicit search sends fields through the CoolCode newspaper endpoint to the Library. It shares recent results for up to an hour. Page thumbnails load from the Library. Pins and imported receipts stay in the tab.
 
 ## Development
 
@@ -78,4 +78,4 @@ If the Library has issued an access-exemption User-Agent, add an **Actions repos
 
 The workflow passes this secret only to `scripts/collect.py`. `scripts/loc_http.py` sends it only to HTTPS `loc.gov` or `www.loc.gov` on the normal HTTPS port. All redirects are rejected before any private header is forwarded. Network errors use sanitized messages; raw response bodies and headers are not logged. A response echoing the header or token is discarded before it could become a published capture. Without this optional secret, the collector uses its ordinary public User-Agent; it may still encounter the provider's verification challenge.
 
-After adding the secret, manually run the existing Pages workflow with **Refresh saved searches** (Headline Vault) or **Refresh all configured discovery shelves** (Old News Oddities) enabled. A normal code push remains an offline/config-change build and does not prove private-header collection succeeded. The existing request intervals and atomic last-good-capture behavior remain in force. This exemption affects server-side collection only; the private value is never shared with visitors, so browser live searches can still face provider access checks. No Cloudflare or VPS change is required.
+After adding the secret, manually run the existing Pages workflow with **Refresh saved searches** (Headline Vault) or **Refresh all configured discovery shelves** (Old News Oddities) enabled. A normal code push remains an offline/config-change build and does not prove private-header collection succeeded. The existing request intervals and atomic last-good-capture behavior remain in force. For interactive searches, add the same one-line value as an encrypted Cloudflare Worker secret named `LOC_USER_AGENT` on `coolcode-visitor-api`. Deploy the Worker with its `/api/newspapers/search` route. The app sends search parameters to CoolCode. The Worker attaches the issued header to the fixed Chronicling America HTTPS endpoint, rejects redirects, and shares cached results for an hour. Original-source links and downloaded citations continue to point to the Library.

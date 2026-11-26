@@ -37,13 +37,13 @@ def main():
                 assert page.locator('#browse-town option').count() > 1
                 assert page.get_by_role('button',name='Copy page citation').count() == initial
                 page.locator('#reference-date').fill('2000-02-29')
-                page.route('https://www.loc.gov/**',lambda route:route.fulfill(json={'results':[],'pagination':{'of':0}}))
+                page.route('https://coolcode-visitor-api.jeffdyer.workers.dev/api/newspapers/search**',lambda route:route.fulfill(json={'fetched_at':'2026-11-25T12:00:00Z','data':{'results':[],'pagination':{'of':0}}}))
                 page.locator('#century-search').click()
                 page.wait_for_function("document.querySelector('#status').textContent.includes('Loaded 0')")
                 assert page.locator('#start').input_value() == '1900-02-28'
                 assert page.locator('#query').input_value() == ''
                 page.locator('#load-capture').click()
-                page.unroute('https://www.loc.gov/**')
+                page.unroute('https://coolcode-visitor-api.jeffdyer.workers.dev/api/newspapers/search**')
                 page.locator(".record button").first.click()
                 assert page.locator("#pin-count").inner_text() == "1"
                 page.locator("#pinned-only").check()
@@ -81,7 +81,7 @@ def main():
                     assert page.locator("#source-import").is_disabled()
                     assert page.locator("#import").is_disabled()
                     route.fulfill(status=403, content_type="text/html", body="declined")
-                page.route("https://www.loc.gov/**", declined)
+                page.route("https://coolcode-visitor-api.jeffdyer.workers.dev/api/newspapers/search**", declined)
                 # Respect the request spacing after the earlier century-date lookup.
                 page.wait_for_timeout(3600)
                 page.locator("#next").click()
