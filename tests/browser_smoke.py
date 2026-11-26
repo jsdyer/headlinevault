@@ -49,6 +49,15 @@ def main():
                 page.locator("#pinned-only").check()
                 assert page.locator(".record").count() == 1
                 page.locator("#pinned-only").uncheck()
+                page.locator("#query").fill("Halifax")
+                page.locator("#start").fill("1800-01-01")
+                page.locator("#end").fill("1930-12-31")
+                for selector in ["#state","#city","#title","#lccn"]:
+                    page.locator(selector).fill("")
+                page.wait_for_timeout(3600)
+                page.locator("#search-button").click()
+                page.get_by_role("link",name="The Evening Post, front page").wait_for()
+                assert page.get_by_role("link",name="Morning Oregonian, front page").is_visible()
                 page.locator("#query").fill("Halifax explosion")
                 assert "qs=Halifax" in page.locator("#source-search").get_attribute("href")
                 with page.expect_download() as download:
@@ -98,6 +107,15 @@ def main():
                 assert page.locator(".record").count() == 1
                 assert page.locator(".record h3").inner_text() != "Imported Halifax report"
                 page.locator("#pinned-only").uncheck()
+                page.locator("#query").fill("Halifax")
+                page.locator("#start").fill("1800-01-01")
+                page.locator("#end").fill("1930-12-31")
+                for selector in ["#state","#city","#title","#lccn"]:
+                    page.locator(selector).fill("")
+                page.wait_for_timeout(3600)
+                page.locator("#search-button").click()
+                page.get_by_role("link",name="The Evening Post, front page").wait_for()
+                assert page.get_by_role("link",name="Morning Oregonian, front page").is_visible()
                 page.screenshot(path=str(screenshots / "desktop.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
